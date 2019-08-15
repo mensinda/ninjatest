@@ -1,0 +1,49 @@
+# Rules for compiling.
+
+rule cpp_COMPILER
+ command = c++ $ARGS -MD -MQ $out -MF '$DEPFILE' -o $out -c $in
+ deps = gcc
+ depfile = $DEPFILE
+ description = Compiling C++ object $out.
+
+# Rules for linking.
+
+rule cpp_LINKER
+ command = c++ -o $out $in $LINK_ARGS
+ description = Linking target $out.
+
+rule CUSTOM_COMMAND
+ command = $COMMAND
+ description = $DESC
+ restat = 1
+
+rule GEN_TEST
+ command = ./test.py
+ restat = 1
+ generator = 1
+
+# Phony build target, always out of date
+
+build PHONY: phony
+
+build test.cpp: GEN_TEST settings.json
+build test.cpp.o: cpp_COMPILER test.cpp
+ DEPFILE = test.cpp.o.d
+ ARGS = -std=c++17 -O3
+
+build main.cpp.o: cpp_COMPILER main.cpp
+ DEPFILE = main.cpp.o.d
+ ARGS = -std=c++17 -O3
+
+build testPro: cpp_LINKER main.cpp.o test.cpp.o
+
+
+build clean: phony meson-clean
+
+build meson-clean: CUSTOM_COMMAND PHONY
+ COMMAND = /usr/bin/ninja -t clean
+ description = Cleaning.
+
+build all: phony testPro
+
+default all
