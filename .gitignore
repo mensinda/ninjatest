@@ -1,8 +1,10 @@
 *build*/
 *.o
+*.dd
 *.vscode/
 *.ninja*
 testPro
 testPro.exe
 !build.ninja
-test.cpp
+dynC.hpp
+dynH.hpp

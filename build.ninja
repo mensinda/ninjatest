@@ -17,21 +17,34 @@ rule CUSTOM_COMMAND
  description = $DESC
  restat = 1
 
-rule GEN_TEST
- command = ./test.py
+rule gen
+ command = ./gen.py -o $out -t $TYPE
  restat = 1
- generator = 1
+
+rule scan
+ command = ./scan.py -o $out -s $in
+ restat = 1
 
 # Phony build target, always out of date
 
 build PHONY: phony
 
-build test.cpp: GEN_TEST settings.json
-build test.cpp.o: cpp_COMPILER test.cpp
+# Define all rules for potentially required files
+build dynH.hpp: gen
+ TYPE = forHPP
+build dynC.hpp: gen
+ TYPE = forCPP
+
+# Generate the dyndep file
+build test.dd: scan test.cpp
+
+build test.cpp.o: cpp_COMPILER test.cpp || test.dd
+ dyndep = test.dd
  DEPFILE = test.cpp.o.d
  ARGS = -std=c++17 -O3
 
-build main.cpp.o: cpp_COMPILER main.cpp
+build main.cpp.o: cpp_COMPILER main.cpp || test.dd
+ dyndep = test.dd
  DEPFILE = main.cpp.o.d
  ARGS = -std=c++17 -O3
 
